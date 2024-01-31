@@ -12,7 +12,6 @@ unsigned long long GetPTEAddress2()
 // ------------------------------------------
 // gets the address to a page table entry for the given base address
 // should always return a range of 0x6801f50000 through 0x6801f53ffc
-// while the address returned by this is not
 unsigned long long GetPageTableEntryAddress(unsigned int base_address)
 {
 	// check that the supplied base address is valid (aka within the base address range of 0x80000000<-->0x90000000)
