@@ -34,31 +34,30 @@ bool HvxUnmapImagePages(unsigned int base_address)
 	HvpAcquireSpinLock(hrmor + 0x16920);
 
 	// make sure base address is aligned
-	if (base_address & 0xFFFF)
-		== 0
+	if ((base_address & 0xFFFF) == 0)
+	{
+		// base address 0x80000000 is always mapped to start of HV space (0x0 physical), so check we aren't trying to unmap that
+		if ((base_address & 0xFFFFFFFF) != 0x80000000)
 		{
-			// base address 0x80000000 is always mapped to start of HV space (0x0 physical), so check we aren't trying to unmap that
-			if (base_address & 0xFFFFFFFF) != 0x80000000)
-				{
-					unsigned long long pageTableEntry = GetPageTableEntryAddress(base_address);
+			unsigned long long pageTableEntry = GetPageTableEntryAddress(base_address);
 
-					// make sure the PTE exists
-					if (pageTableEntry != NULL)
+			// make sure the PTE exists
+			if (pageTableEntry != NULL)
+			{
+				// make sure the PTE is actually mapped
+				if ((*pageTableEntry & 0x10) != 0)
+				{
+					// loop through every page table entry for the given base address
+					while ((*pageTableEntry >> 5 & 1) == 0)
 					{
-						// make sure the PTE is actually mapped
-						if ((*pageTableEntry & 0x10) != 0)
-						{
-							// loop through every page table entry for the given base address
-							while ((*pageTableEntry >> 5 & 1) == 0)
-							{
-								*pageTableEntry = *pageTableEntry & 0xFFFFFFF0 | 7; // disable the PTE, but do not delete it
-								pageTableEntry = pageTableEntry + 4;				// go to next PTE
-							}
-							return TRUE;
-						}
+						*pageTableEntry = *pageTableEntry & 0xFFFFFFF0 | 7; // disable the PTE, but do not delete it
+						pageTableEntry = pageTableEntry + 4;				// go to next PTE
 					}
+					return TRUE;
 				}
+			}
 		}
+	}
 	HvpReleaseSpinLock(hrmor + 0x16920);
 
 	return FALSE;
