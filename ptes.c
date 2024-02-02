@@ -30,8 +30,8 @@ unsigned long long GetPageTableEntryAddress(unsigned int base_address)
 // disables, but does not delete, all the page table entries for a given base address
 bool HvxUnmapImagePages(unsigned int base_address)
 {
-	unsigned long long hrmor = 0x0000010000000000ULL; // hashed + encrypted memory
-	HvpAcquireSpinLock(hrmor + 0x16920);
+	unsigned long long offset = 0x0000000200000000ULL; // r2, 2nd encryption page of memory (hrmor already defines hashed+encrypted)
+	HvpAcquireSpinLock(offset + 0x16920);
 
 	// make sure base address is aligned
 	if ((base_address & 0xFFFF) == 0)
@@ -58,7 +58,7 @@ bool HvxUnmapImagePages(unsigned int base_address)
 			}
 		}
 	}
-	HvpReleaseSpinLock(hrmor + 0x16920);
+	HvpReleaseSpinLock(offset + 0x16920);
 
 	return FALSE;
 }
@@ -69,8 +69,8 @@ bool HvxUnmapImagePages(unsigned int base_address)
 // unmaps all the page table entries for a given range
 bool HvxUnmapImageRange(unsigned int base_address_start, unsigned int base_address_end)
 {
-	unsigned long long hrmor = 0x0000010000000000ULL;
-	HvpAcquireSpinLock(hrmor + 0x16920);
+	unsigned long long offset = 0x0000000200000000ULL;
+	HvpAcquireSpinLock(offset + 0x16920);
 
 	unsigned long long pteAddress = GetPTEAddress2();
 
@@ -124,6 +124,6 @@ bool HvxUnmapImageRange(unsigned int base_address_start, unsigned int base_addre
 	}
 
 	HvpSetRMCI(1);
-	HvpReleaseSpinLock(hrmor + 0x16920);
+	HvpReleaseSpinLock(offset + 0x16920);
 	return FALSE;
 }
